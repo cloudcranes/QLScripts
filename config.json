@@ -1,0 +1,19 @@
+{
+    "jm_comic": [
+        {
+            "username": "user1",
+            "password": "pass1",
+            "cookies": "",
+            "expires_time": "",
+            "wxpusher_uid": ""
+        },
+        {
+            "username": "user2",
+            "password": "pass2",
+            "cookies": "",
+            "expires_time": "",
+            "wxpusher_uid": ""
+        }
+    ],
+    "jm_fabuye_url": "https://jmcomicgo.xyz"
+}
