@@ -36,5 +36,5 @@
   - [ ] cookie：必须，登录https://www.ddnsto.com/app/#/devices 抓包cookie
 - [ ] 东方棘市
   - [ ] nickname：可空，脚本自动填入
-  - [ ] token：必须，抓包https://ys.shajixueyuan.com/api下token
+  - [ ] token：必须，抓包https://ys.shajixueyuan.com/api 下token
   - [ ] wxpusher_uid：同上
