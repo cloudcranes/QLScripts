@@ -1,0 +1,87 @@
+import json
+import time
+from send import send
+import requests
+
+
+class run:
+    def __init__(self, uid, ukey):
+        self.uid = uid
+        self.ukey = ukey
+        self.base_url = 'http://op.xiequ.cn/IpWhiteList.aspx'
+        self.white_list = ''
+        self.last_ip = ''
+        self.msg = '携趣代理白名单管理工具\n'
+
+    def get_white_list(self):
+        url = self.base_url + '?uid=' + self.uid + '&ukey=' + self.ukey + '&act=get'
+        response = requests.get(url)
+        self.white_list = response.text
+        print(f"白名单：{self.white_list}")
+
+    def add_to_white_list(self, ip):
+        url = self.base_url + '?uid=' + self.uid + '&ukey=' + self.ukey + '&act=add&ip=' + ip
+        response = requests.get(url)
+        result = response.text
+        if "Err:IpOutOfLimit:5" in result:
+            print("I白名单已满，正在清空并重新添加...")
+            self.clear_white_list()
+            time.sleep(2)
+            self.add_to_white_list(self.last_ip)
+        elif "Err:IpRep" in result:
+            self.msg += "IP重复，无需添加"
+            print("IP已存在，无需添加")
+        else:
+            print(f"添加白名单结果：{result}")
+
+    def del_from_white_list(self, ip):
+        url = self.base_url + '?uid=' + self.uid + '&ukey=' + self.ukey + '&act=del&ip=' + ip
+        response = requests.get(url)
+        result = response.text
+        print(f"移除白名单结果：{result}")
+
+    def clear_white_list(self):
+        url = self.base_url + '?uid=' + self.uid + '&ukey=' + self.ukey + '&act=del&ip=all'
+        response = requests.get(url)
+        result = response.text
+        print(f"清空白名单结果：{result}")
+
+    def get_last_ip(self):
+        url = 'https://ddns.oray.com/checkip'
+        response = requests.get(url)
+        ip = response.text.split(": ")[-1].strip()
+        self.last_ip = ip
+        print(f"当前公网IP：{ip}")
+
+    def main(self):
+        self.get_last_ip()
+        self.get_white_list()
+        self.add_to_white_list(self.last_ip)
+        # self.del_from_white_list(self.last_ip)
+        # self.clear_white_list()
+
+        # 将white_list和最后的ip写入文件
+        with open('config.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            for user in config['xiequ']:
+                if user['uid'] == self.uid:
+                    user['white_list'] = self.white_list
+                    user['last_ip'] = self.last_ip
+                    break
+        with open('config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=4)
+
+        print("更新配置文件完成")
+        self.msg += f"加白名单成功\n添加IP：{self.last_ip}\n当前白名单：{self.white_list}"
+
+
+if __name__ == '__main__':
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+    for user in config['xiequ']:
+        uid = user['uid']
+        ukey = user['ukey']
+        uuid = user['wxpusher_uid']
+        run = run(uid, ukey)
+        run.main()
+        send.wxpusher(uuid, run.msg)
