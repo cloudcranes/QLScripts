@@ -85,11 +85,12 @@ class JMFabuye:
         headers = self.headers_2
         headers['Referer'] = f'{self.host_url}/'
         headers['Origin'] = f'{self.host_url}'
-        try:
-            response = requests.get(url, headers=headers, cookies=json.loads(self.cookies))
-            self.print_now(f'点击广告成功: {str(response.json()['msg'])}')
-        except Exception as e:
-            self.print_now(f'点击广告失败: {e}')
+        headers['Cookie'] = self.cookies
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            self.print_now(f'获取广告成功: {response.json()["msg"]}')
+        else:
+            self.print_now(f'获取广告失败: {response.text}')
 
     def login(self):
         login_url = f'{self.host_url}/login'
@@ -108,10 +109,10 @@ class JMFabuye:
                 # 保存cookies, 用于后续访问
                 with open('config.json', 'r', encoding='utf-8') as f:
                     jm_data = json.load(f)
-                for i, u in enumerate(jm_data['user']):
+                for i, u in enumerate(jm_data['jm_comic']):
                     if u['username'] == self.username:
-                        jm_data['user'][i]['cookies'] = cookies
-                        jm_data['user'][i]['expires_time'] = (datetime.now() + timedelta(days=90)).strftime(
+                        jm_data['jm_comic'][i]['cookies'] = cookies
+                        jm_data['jm_comic'][i]['expires_time'] = (datetime.now() + timedelta(days=90)).strftime(
                             '%Y-%m-%d %H:%M:%S')
                         break
                 with open('config.json', 'w', encoding='utf-8') as f:
@@ -128,12 +129,15 @@ class JMFabuye:
         headers = self.headers_2
         headers['Referer'] = f'{self.host_url}/'
         headers['Origin'] = f'{self.host_url}'
+        headers['Cookie'] = self.cookies
         payload = f'daily_id={self.dataDailyid}&oldstep=1'
         try:
             response = requests.post(sign_url, headers=headers, data=payload)
-            self.print_now(f'签到成功: {response.text}')
+            self.print_now(f'签到成功: {response.json()["msg"]}')
+            self.msg_list += f'签到成功: {response.json()["msg"]}\n'
         except Exception as e:
             self.print_now(f'签到失败: {e}')
+            self.msg_list += f'签到失败: {e}\n'
 
     def get_user_info(self):
         # 获取用户信息
