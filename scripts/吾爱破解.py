@@ -11,7 +11,7 @@ from sys import stdout
 import requests
 from SendNotify import send
 
-now = datetime.now()
+现在 = datetime.now()
 # ck获取 https://www.52pojie.cn/forum.php
 # ck格式 完整cookie
 wapj_ck = environ.get('wapj_ck') if environ.get('wapj_ck') else True
