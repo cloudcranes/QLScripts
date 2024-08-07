@@ -10,12 +10,16 @@
 |  6   |     恩山无线论坛      | [恩山无线论坛.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/%E6%81%A9%E5%B1%B1%E6%97%A0%E7%BA%BF%E8%AE%BA%E5%9D%9B.py) |
 |  7   |      DDNSTO续费       | [DDNSTO续费.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/DDNSTO%E7%BB%AD%E8%B4%B9.py) |
 
+- [ ] 阿里云盘
+  - [ ] nick_name：可空，脚本登陆后自动填入
+  - [ ] refresh_token：必须，token获取url https://alist.nn.ci/zh/guide/drivers/aliyundrive.html
+  - [ ] wxpusher_id：必须，wxpusher的用户uid
 - [ ] 禁漫天堂
   - [ ] username：必须，用户登录名
   - [ ] password：必须，用户登录密码
   - [ ] cookies：可空，脚本登陆后自动填入
   - [ ] expires_time：可空，没啥用，就是提个醒
-  - [ ] wxpusher_id，必须，wxpusher的用户id
+  - [ ] wxpusher_id，同上
 - [ ] 携趣代理加白
   - [ ] uid：必须，携趣代理后台获取
   - [ ] ukey：必须，携趣代理后台获取
