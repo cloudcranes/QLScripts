@@ -1,121 +1,86 @@
 import json
-import logging
-import os
-
 import requests
-
-from quantum import api
-
-refresh_url = "https://auth.aliyundrive.com/v2/account/token"
-sign_url = "https://member.aliyundrive.com/v1/activity/sign_in_list"
-reward_url = "https://member.aliyundrive.com/v1/activity/sign_in_reward"
-# 阿里云盘账号
-# 阿里云盘账号的refresh_token，在https://alist.nn.ci/zh/guide/drivers/aliyundrive.html获取
-refresh_token = os.environ.get("ALIYUN_REFRESH_TOKEN")
-
-# 日志配置
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+from send import send
 
 
-class AliyunNetdisk(object):
-    def __init__(self):
-        self.id = ""
-        self.refresh_url = refresh_url
-        self.sign_url = sign_url
-        self.reward_url = reward_url
+class AliyunPan:
+    def __init__(self, refresh_token):
         self.refresh_token = refresh_token
-        self.access_token = ""
-        self.nick_name = ""
-        self.device_id = ""
-        self.msg = "【阿里云盘签到】\n"
+        self.refresh_url = 'https://auth.aliyundrive.com/v2/account/token'
+        self.sign_url = 'https://member.aliyundrive.com/v1/activity/sign_in_list'
+        self.reward_url = 'https://member.aliyundrive.com/v1/activity/sign_in_reward?_rx-s=mobile'
+        self.headers = {'Content-Type': 'application/json'}
+        self.access_token = ''
+        self.nick_name = ''
+        self.device_id = ''
+        self.id = ''
+        self.msg = '##【阿里云盘签到】\n'
 
-    def refresh(self):
-        url = self.refresh_url
-        headers = {
-            "content-type": "application/json"
-        }
+    def refresh_access_token(self):
         data = {
-            "grant_type": "refresh_token",
-            "refresh_token": self.refresh_token
+            'grant_type': 'refresh_token',
+            'refresh_token': self.refresh_token
         }
-        try:
-            r = requests.post(url, headers=headers, data=json.dumps(data))
-            print(r.status_code)
-            if r.status_code == 200:
-                self.access_token = r.json()["access_token"]
-                self.nick_name = r.json()["nick_name"]
-                self.device_id = r.json()["device_id"]
-                self.msg += f"账号 {self.nick_name} 刷新成功\n"
-                logger.info(f"{self.nick_name} 刷新成功")
-            elif r.status_code == 400:
-                logger.info(f"refresh_token {self.refresh_token} 已失效")
-                self.msg += f"refresh_token {self.refresh_token} 已失效，请重新获取\n"
-        except Exception as e:
-            logger.error(f"refresh_token {self.refresh_token} 刷新失败 {e}")
-            self.msg += f"refresh_token {self.refresh_token} 刷新失败 {e}\n"
-
-    def sign(self):
-        url = self.sign_url
-        headers = {
-            "content-type": "application/json",
-            "authorization": "Bearer " + self.access_token
-        }
-        data = {
-            "isReward": False
-        }
-        try:
-            r = requests.post(url, headers=headers, data=json.dumps(data))
-            if r.json()["success"]:
-                self.id = r.json()["result"]["signInCount"]
-                o = self.id - 1
-                self.msg += (f"账号 {self.nick_name} 签到成功\n"
-                             f"{r.json()['result']['signInLogs'][o]['calendarChinese']}\n"
-                             f"{r.json()['result']['signInLogs'][o]['reward']['notice']}\n")
-                logger.info(f"{self.nick_name} 签到成功\n"
-                            f"{r.json()['result']['signInLogs'][o]['calendarChinese']}\n"
-                            f"{r.json()['result']['signInLogs'][o]['reward']['notice']}\n")
-            else:
-                logger.info(f"{self.nick_name} 签到失败")
-                self.msg += f"账号 {self.nick_name} 签到失败\n"
-                self.msg += r.text
-        except Exception as e:
-            logger.error(f"账号 {self.nick_name} 签到失败 {e}")
-            self.msg += f"账号 {self.nick_name} 签到失败 {e}\n"
-            self.msg += r.text
-
-    def reward(self):
-        url = self.reward_url
-        headers = {
-            "content-type": "application/json",
-            "authorization": "Bearer " + self.access_token,
-            "x-device-id": self.device_id
-        }
-        data = {
-            "signInDay": self.id
-        }
-        r = requests.post(url, headers=headers, data=json.dumps(data))
-        # print(r.text)
-        if r.status_code == 200:
-            self.msg += f"账号 {self.nick_name} 奖励领取成功\n"
-            self.msg += f"{r.json()['result']['description']}\n"
-            logger.info(f"{self.nick_name} 奖励领取成功 {r.json()['result']['description']}")
+        response = requests.post(self.refresh_url, headers=self.headers, data=json.dumps(data))
+        if response.json()['status'] == 'enabled':
+            self.access_token = response.json()['access_token']
+            self.nick_name = response.json()['nick_name']
+            self.device_id = response.json()['device_id']
+            with open('config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            for user in config['aliyun']:
+                if user['refresh_token'] == self.refresh_token:
+                    user['nick_name'] = self.nick_name
+            with open('config.json', 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=4)
+            self.msg += f'账号{self.nick_name} 刷新access_token成功\n'
         else:
-            self.msg += f"账号 {self.nick_name} 奖励领取失败 {r.json()['message']}"
-            logger.info(f"账号 {self.nick_name} 奖励领取失败 {r.json()['message']}")
+            self.msg += '刷新access_token失败\n'
 
+    def sign_in(self):
+        headers = self.headers.copy()
+        headers['Authorization'] = f'Bearer {self.access_token}'
+        data = {'isReward': False}
+        response = requests.post(self.sign_url, headers=headers, data=json.dumps(data))
+        if response.json()['success']:
+            self.id = response.json()['result']['signInCount']
+            o = self.id - 1
+            self.msg += (f'账号{self.nick_name} 签到成功 '
+                         f'{response.json()["result"]["signInLogs"][o]["calendarChinese"]} '
+                         f'{response.json()["result"]["signInLogs"][o]["reward"]["notice"]}\n')
+        else:
+            self.msg += f'账号{self.nick_name} 签到失败\n'
 
-def main():
-    api_instance = api()
-    aliyun = AliyunNetdisk()
-    aliyun.refresh()
-    if not aliyun.access_token:
-        api_instance.send(aliyun.msg)
-        return
-    aliyun.sign()
-    aliyun.reward()
-    api_instance.send(aliyun.msg)
+    def get_reward(self):
+        headers = self.headers.copy()
+        headers['Authorization'] = f'Bearer {self.access_token}'
+        headers['x-device-id'] = self.device_id
+        headers['X-Canary'] = 'client=iOS,app=adrive,version=v6.2.1'
+        data = {'signInDay': self.id}
+        response = requests.post(self.reward_url, headers=headers, data=json.dumps(data))
+        if response.status_code == 200:
+            self.msg += (f'账号{self.nick_name} 领取奖励成功\n'
+                         f'{response.json()["result"]["description"]}\n')
+        else:
+            self.msg += f'账号{self.nick_name} 领取奖励失败 {response.json()["message"]}\n'
+
+    def run(self):
+        self.refresh_access_token()
+        self.sign_in()
+        self.get_reward()
 
 
 if __name__ == '__main__':
-    main()
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+    for user in config['aliyun']:
+        # token获取url https://alist.nn.ci/zh/guide/drivers/aliyundrive.html
+        refresh_token = user['refresh_token']
+        uid = user['wxpusher_uid']
+        aliyun = AliyunPan(refresh_token)
+        aliyun.run()
+        # if uid:
+        #     send.wxpusher(uid, aliyun.msg)
+        # else:
+        #     print('未配置WxPusher UID，不发送通知')
+        print(aliyun.msg)
