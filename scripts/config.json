@@ -65,5 +65,13 @@
             "token": "",
             "wxpusher_uid": ""
         }
-    ]
+    ],
+    "txsp_vip": [
+        {
+            "username": "",
+            "txspCookie": "",
+            "txspRefreshCookie": "",
+            "txspRefreshBody": "",
+            "wxpusher_uid": ""
+        }
 }
