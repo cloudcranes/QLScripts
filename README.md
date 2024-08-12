@@ -10,6 +10,7 @@
 |  6   |     恩山无线论坛      |    网站    | [恩山无线论坛.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/%E6%81%A9%E5%B1%B1%E6%97%A0%E7%BA%BF%E8%AE%BA%E5%9D%9B.py) |
 |  7   |      DDNSTO续费       |    网站    | [DDNSTO续费.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/DDNSTO%E7%BB%AD%E8%B4%B9.py) |
 |  8   |       东方棘市        | 微信小程序 | [东方棘市.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/%E4%B8%9C%E6%96%B9%E6%A3%98%E5%B8%82.py) |
+|  9   | 江西移动_心级服务签到 |     -      | [江西移动_心级服务签到.py](https://github.com/cloudcranes/QLScripts/blob/main/scripts/%E6%B1%9F%E8%A5%BF%E7%A7%BB%E5%8A%A8_%E5%BF%83%E7%BA%A7%E6%9C%8D%E5%8A%A1%E7%AD%BE%E5%88%B0.py) |
 
 - [ ] 阿里云盘
   - [ ] nick_name：可空，脚本登陆后自动填入
@@ -34,7 +35,12 @@
   - [ ] username：可空，备注名
   - [ ] userid：必须，先购买一次7天免费套餐 抓包查看https://www.ddnsto.com/api/user/routers/*****/ 这个url里面的*****就是userid
   - [ ] cookie：必须，登录https://www.ddnsto.com/app/#/devices 抓包cookie
+  - [ ] wxpusher_uid：同上
 - [ ] 东方棘市
   - [ ] nickname：可空，脚本自动填入
   - [ ] token：必须，抓包https://ys.shajixueyuan.com/api 下token
+  - [ ] wxpusher_uid：同上
+- [ ] 江西移动_心级服务签到
+  - [ ] username：必须，手机号
+  - [ ] token：必须，类似 https://wxmall.jx139.com/mo-h5-new/floor/cloud-vip-v3/index?mobile=18888888888&token=123456
   - [ ] wxpusher_uid：同上
