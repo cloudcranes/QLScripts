@@ -55,7 +55,7 @@ class run:
             self.cookies = self.txspCookie.replace('vusession=', 'vusession=' + self.vqq_vusession + ';')
             print(f'vusession refresh success: {self.vqq_vusession}')
         else:
-            print(f'vusession refresh failed: {response['msg']}')
+            print(f'vusession refresh failed: {response["msg"]}')
 
     # 签到奖励
     def sign_in(self):
