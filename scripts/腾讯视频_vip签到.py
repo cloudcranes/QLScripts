@@ -1,7 +1,7 @@
 import json
 import requests
 from send import send
-
+from qinglong import ql
 
 # txspCookie 腾讯视频app 进入签到页面的Cookie
 # txspRefreshCookie 腾讯视频网页NewRefresh接口中(https://pbaccess.video.qq.com/trpc.video_account_login.web_login_trpc.WebLoginTrpc/NewRefresh) 的数据，用来刷新Cookie中的vqq_vusession
@@ -156,16 +156,17 @@ class run:
 
 
 if __name__ == '__main__':
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    for user in config['txsp_vip']:
-        txspCookie = user['txspCookie']
-        txspRefreshCookie = user['txspRefreshCookie']
-        txspRefreshBody = user['txspRefreshBody']
+    ql = ql()
+    envs = ql.get_env_by_name('txsp_data')
+    for env in envs:
+        remarks = env.get('remarks', '')
+        txspCookie = env['value'].split('txspCookie=')[1].split('&')[0].replace('{', '').replace('}', '')
+        txspRefreshCookie = env['value'].split('txspRefreshCookie=')[1].split('&')[0].replace('{', '').replace('}', '')
+        txspRefreshBody = env['value'].split('txspRefreshBody=')[1].split('&')[0]
         run = run(txspCookie, txspRefreshCookie, txspRefreshBody)
         run.main()
-        if user['wxpusher_uid']:
-            send.wxpusher(user['wxpusher_uid'], run.msg)
+        if remarks and '@' in remarks:
+            send.wxpusher(remarks.split('@')[1], run.msg)
         else:
             print('未配置WxPusher，取消微信推送')
         print(run.msg)
