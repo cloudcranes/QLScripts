@@ -5,20 +5,20 @@ import requests
 from datetime import datetime, timedelta
 from time import sleep
 from send import send
+from qinglong import ql
 
 
 class JMFabuye:
-    def __init__(self, username, password, base_url, cookies):
+    def __init__(self, username, password, base_url):
         # 时间精确到秒
         datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         self.username = username
         self.password = password
         self.base_url = base_url
-        self.cookies = cookies
+        self.cookies = ''
         self.dataDailyid = ''
         self.host_url = ''
-        self.expires_time = ''
         self.msg_list = '【禁漫天堂】\n'
         self.headers_1 = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -106,17 +106,6 @@ class JMFabuye:
                 cookies = dict(response.cookies)
                 cookies = ';'.join([f'{k}={v}' for k, v in cookies.items()])
                 self.cookies = json.dumps(cookies)
-                # 保存cookies, 用于后续访问
-                with open('config.json', 'r', encoding='utf-8') as f:
-                    jm_data = json.load(f)
-                for i, u in enumerate(jm_data['jm_comic']):
-                    if u['username'] == self.username:
-                        jm_data['jm_comic'][i]['cookies'] = cookies
-                        jm_data['jm_comic'][i]['expires_time'] = (datetime.now() + timedelta(days=90)).strftime(
-                            '%Y-%m-%d %H:%M:%S')
-                        break
-                with open('config.json', 'w', encoding='utf-8') as f:
-                    json.dump(jm_data, f, ensure_ascii=False, indent=4)
                 self.print_now(f'登录成功: {self.username}')
             else:
                 self.print_now(f'登录失败: {response.status_code}')
@@ -176,17 +165,16 @@ class JMFabuye:
 
 
 if __name__ == '__main__':
-    with open('config.json', 'r', encoding='utf-8') as f:
-        jm_data = json.load(f)
-    base_url = jm_data['jm_fabuye_url']
-    for user in jm_data['jm_comic']:
-        username = user['username']
-        password = user['password']
-        cookies = user['cookies']
-        expires_time = user['expires_time']
-        uid = user['wxpusher_uid']
+    ql = ql()
+    envs = ql.get_env_by_name('jmtt_data')
+    base_url_list = ql.get_env_by_name('jmtt_base_url')
+    base_url = base_url_list[0]['value']
+    for env in envs:
+        username = env['value'].split('username=')[1].split('&')[0]
+        password = env['value'].split('password=')[1].split('&')[0]
+        wxpusher_uid = env.get('remarks', None)
         # 实例化禁漫天堂类
-        fabuye = JMFabuye(username, password, base_url, cookies)
+        fabuye = JMFabuye(username, password, base_url)
         fabuye.print_now(f'开始执行: {username}')
         # 获取域名
         fabuye.get_wall_url()
@@ -203,4 +191,8 @@ if __name__ == '__main__':
         # 获取用户信息
         fabuye.get_user_info()
         # 发送通知
-        send.wxpusher(uid, fabuye.msg_list)
+        if wxpusher_uid and '@' in wxpusher_uid:
+            send.wxpusher(wxpusher_uid.split('@')[1], fabuye.msg_list)
+        else:
+            print('未配置WxPusher UID，取消微信推送')
+        print(fabuye.msg_list)
