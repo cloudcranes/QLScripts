@@ -1,7 +1,7 @@
-import json
 import requests
 import time
 from send import send
+from qinglong import ql
 
 
 class dfjs:
@@ -9,7 +9,6 @@ class dfjs:
         self.token = account
         self.msg = '##【微信小程序-东方棘市】\n'
         self.nickname = ''
-        self.main()
 
     def common_post(self, url, body):
         headers = {
@@ -53,6 +52,10 @@ class dfjs:
         print('开始签到')
         sign = self.common_post('/user_sign/sign', {})
         print(sign.get('msg', ''))
+        if sign.get('msg') == '登录超时，请重新登录':
+            print('登录超时，请重新登录')
+            self.msg += '登录超时，请重新登录\n'
+            return
         if sign.get('code') == 1:
             print(f'能量释放：{sign.get("data", {}).get("rewards_info", {}).get("energy_release", "")}')
 
@@ -77,25 +80,18 @@ class dfjs:
 
         print(f'{self.nickname} 拥有能量：{remaining_energies} 果子：{remaining_fruits}\n')
         self.msg += f'{self.nickname} 拥有能量：{remaining_energies} 果子：{remaining_fruits}\n'
-        with open('config.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        for user in config['wxapp_dfjs']:
-            if user['token'] == self.token:
-                user['nickname'] = self.nickname
-        with open('config.json', 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == "__main__":
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    for user in config['wxapp_dfjs']:
-        uid = user['wxpusher_uid']
-        token = user['token']
-        run = dfjs(token)
-        
-        # if uid:
-        #     send.wxpusher(uid, run.msg)
-        # else:
-        #     print("未配置WxPusher UID")
-        print(run.msg)
+    ql = ql()
+    envs = ql.get_env_by_name('dfjs_data')
+    for env in envs:
+        token = env['value']
+        remarks = env.get('remarks', '')
+        dfjs_obj = dfjs(token)
+        dfjs_obj.main()
+        if remarks and '@' in remarks:
+            send.wxpusher(remarks.split('@')[1], dfjs_obj.msg)
+        else:
+            print('未配置wxpusher')
+        print(dfjs_obj.msg)
