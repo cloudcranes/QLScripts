@@ -1,9 +1,9 @@
-import json
 import re
 import uuid
 from datetime import datetime, timedelta
 from send import send
 import requests
+from qinglong import ql
 
 
 class DDNSTO:
@@ -83,20 +83,23 @@ class DDNSTO:
 
 if __name__ == '__main__':
     msg = '##【DDNSTO续费】\n'
-    i = 0
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    for user in config['ddnsto']:
-        i += 1
-        msg += f'------- 账号{i} -------\n'
-        msg += f'用户名：{user["username"]}\n'
+    ql = ql()
+    envs = ql.get_env_by_name('ddnsto_data')
+    print(envs)
+    for env in envs:
+        remarks = env.get('remarks', '')
         # 先购买一次7天免费套餐 抓包查看https://www.ddnsto.com/api/user/routers/*****/ 这个url里面的*****就是userid
-        userid = user['userid']
+        userid = env['value'].split('userid=')[1].split('&')[0]
         # 配置参数 登录https://www.ddnsto.com/app/#/devices 抓包cookie
-        cookie = user['cookie']
+        # cookie由json字符串组成，去除{}
+        cookie = env['value'].split('cookie=')[1].split('&')[0]
+        cookie = cookie.replace('{', '').replace('}', '')
+        msg += f'用户：{userid}\n'
         xcsrftoken = re.findall('csrftoken=(.*?);', cookie, re.S)[0]
-        uid = user['wxpusher_uid']
         ddnsto = DDNSTO(userid, cookie, xcsrftoken)
         msg += ddnsto.main()
+        if remarks and '@' in remarks:
+            send.wxpusher(remarks.split('@')[1], msg)
+        else:
+            print('未配置wxpusher')
         print(msg)
-        send.wxpusher(uid, msg)
