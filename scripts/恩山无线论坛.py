@@ -2,6 +2,7 @@ import json
 import re
 import requests
 from send import send
+from qinglong import ql
 
 
 def main():
@@ -22,20 +23,20 @@ def main():
 
 
 if __name__ == '__main__':
-    msg = "#【恩山无线论坛】\n"
-    i = 0
-    # 读取配置文件
-    with open("config.json", "r", encoding="utf-8") as f:
-        config = json.load(f)
-    for user in config["enshan"]:
-        i += 1
-        print(f"-------- 账号{i} 开始--------")
-        msg += f"------- 账号{i} 开始-------\n"
-        name = user["name"]
-        print(f"用户名：{name}")
-        uid = user["wxpusher_uid"]
-        cookie = user["cookie"]
-        msg += main() + "\n"
-        msg += f"------- 账号{i} 结束-------\n"
+    msg = "##【恩山无线论坛】\n"
+    ql = ql()
+    envs = ql.get_env_by_name('enshan_data')
+    for env in envs:
+        cookie = env['value']
+        remarks = env.get('remarks', '')
+        res = main()
+        if res:
+            msg += f"{remarks}\n{res}\n"
+        else:
+            msg += f"{remarks}\n登录失败，请检查Cookie是否正确。\n"
+        if remarks and '@' in remarks:
+            send.wxpusher(remarks.split('@')[1], msg)
+        else:
+            print('未配置wxpusher')
         print(msg)
-        send.wxpusher(uid, msg)
+
