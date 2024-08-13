@@ -1,6 +1,7 @@
 import json
 import requests
 from send import send
+from qinglong import ql
 
 
 class AliyunPan:
@@ -26,13 +27,6 @@ class AliyunPan:
             self.access_token = response.json()['access_token']
             self.nick_name = response.json()['nick_name']
             self.device_id = response.json()['device_id']
-            with open('config.json', 'r', encoding='utf-8') as f:
-                config = json.load(f)
-            for user in config['aliyun']:
-                if user['refresh_token'] == self.refresh_token:
-                    user['nick_name'] = self.nick_name
-            with open('config.json', 'w', encoding='utf-8') as f:
-                json.dump(config, f, ensure_ascii=False, indent=4)
             self.msg += f'账号{self.nick_name} 刷新access_token成功\n'
         else:
             self.msg += '刷新access_token失败\n'
@@ -71,16 +65,16 @@ class AliyunPan:
 
 
 if __name__ == '__main__':
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    for user in config['aliyun']:
+    ql = ql()
+    envs = ql.get_env_by_name('alyp_data')
+    for env in envs:
         # token获取url https://alist.nn.ci/zh/guide/drivers/aliyundrive.html
-        refresh_token = user['refresh_token']
-        uid = user['wxpusher_uid']
+        refresh_token = env['value']
+        wxpusher_uid = env.get('remarks', '')
         aliyun = AliyunPan(refresh_token)
         aliyun.run()
-        # if uid:
-        #     send.wxpusher(uid, aliyun.msg)
-        # else:
-        #     print('未配置WxPusher UID，不发送通知')
+        if wxpusher_uid and '@' in wxpusher_uid:
+            send.wxpusher(wxpusher_uid.split('@')[1], aliyun.msg)
+        else:
+            print('未配置WxPusher')
         print(aliyun.msg)
