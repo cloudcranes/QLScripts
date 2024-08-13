@@ -2,6 +2,7 @@ import json
 import time
 from send import send
 import requests
+from qinglong import ql
 
 
 class run:
@@ -11,7 +12,7 @@ class run:
         self.base_url = 'http://op.xiequ.cn/IpWhiteList.aspx'
         self.white_list = ''
         self.last_ip = ''
-        self.msg = '携趣代理白名单管理工具\n'
+        self.msg = '##【携趣代理白名单管理工具】\n'
 
     def get_white_list(self):
         url = self.base_url + '?uid=' + self.uid + '&ukey=' + self.ukey + '&act=get'
@@ -29,7 +30,7 @@ class run:
             time.sleep(2)
             self.add_to_white_list(self.last_ip)
         elif "Err:IpRep" in result:
-            self.msg += "IP重复，无需添加"
+            self.msg += "IP重复，无需添加\n"
             print("IP已存在，无需添加")
         else:
             print(f"添加白名单结果：{result}")
@@ -59,29 +60,20 @@ class run:
         self.add_to_white_list(self.last_ip)
         # self.del_from_white_list(self.last_ip)
         # self.clear_white_list()
-
-        # 将white_list和最后的ip写入文件
-        with open('config.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            for user in config['xiequ']:
-                if user['uid'] == self.uid:
-                    user['white_list'] = self.white_list
-                    user['last_ip'] = self.last_ip
-                    break
-        with open('config.json', 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
-
-        print("更新配置文件完成")
         self.msg += f"加白名单成功\n添加IP：{self.last_ip}\n当前白名单：{self.white_list}"
 
 
 if __name__ == '__main__':
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    for user in config['xiequ']:
-        uid = user['uid']
-        ukey = user['ukey']
-        uuid = user['wxpusher_uid']
+    ql = ql()
+    envs = ql.get_env_by_name('xiequ_data')
+    for env in envs:
+        uid = env['value'].split('uid=')[1].split('&')[0]
+        ukey = env['value'].split('ukey=')[1].split('&')[0]
+        wxpusher_uid = env.get('remarks', '')
         run = run(uid, ukey)
         run.main()
-        send.wxpusher(uuid, run.msg)
+        if wxpusher_uid and '@' in wxpusher_uid:
+            send.wxpusher(wxpusher_uid.split('@')[1], run.msg)
+        else:
+            print('未配置WxPusher')
+        print(run.msg)
