@@ -14,9 +14,6 @@ now = datetime.now()
 
 
 # ck获取 https://www.52pojie.cn/forum.php
-# ck格式 完整cookie
-# wapj_data = 'htVC_2132_visitedfid=24; Hm_lvt_46d556462595ed05e05f009cdafff31a=1717219682,1717507150; htVC_2132_saltkey=g7037uws; htVC_2132_lastvisit=1717489702; wzws_sessionid=gDM2LjU2Ljg0LjE3MoJkYjFjYWGgZl8UWoE1NGU1YTQ=; Hm_lpvt_46d556462595ed05e05f009cdafff31a=1717507160; htVC_2132_seccodecSRKk=1939482.ed497f50ec2e24ff25; htVC_2132_ulastactivity=1717507149%7C0; htVC_2132_auth=aa9ddejd4OTFj8o9Fm2LYd17HhwJmNgeH6ROae23BIuTzhCS0W2Iwd5%2BQuBcrlh3lO59ZONsMpate2EGNS9eijVphOSf; htVC_2132_lastcheckfeed=2002841%7C1717507149; htVC_2132_checkfollow=1; htVC_2132_lip=36.56.84.172%2C1717507149; htVC_2132_lastact=1717507154%09misc.php%09seccode; htVC_2132_connect_is_bind=1; htVC_2132_seccodecS=1939503.27fc6acc25ca6ab0ac'
-
 
 class wapj:
     def __init__(self, ck):
