@@ -1,7 +1,5 @@
 import json
-
 import requests
-
 
 class send:
     def __init__(self):
