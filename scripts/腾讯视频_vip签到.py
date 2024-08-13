@@ -146,13 +146,6 @@ class run:
                      f'每日签到：{self.sign} - {self.check_in_score}\n'
                      f'视频观看：{self.watch}\n'
                      f'赠送福袋：{self.fd}')
-        with open(f'config.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            for user in config['txsp_vip']:
-                if user['txspRefreshCookie'] == self.txspRefreshCookie:
-                    user['username'] = self.nick
-        with open(f'config.json', 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':
