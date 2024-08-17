@@ -14,6 +14,9 @@ now = datetime.now()
 
 
 # ck获取 https://www.52pojie.cn/forum.php
+# ck格式 完整cookie
+# wapj_data = 'htVC_2132_visitedfid=24; Hm_lvt_46d556462595ed05e05f009cdafff31a=1717219682,1717507150; htVC_2132_saltkey=g7037uws; htVC_2132_lastvisit=1717489702; wzws_sessionid=gDM2LjU2Ljg0LjE3MoJkYjFjYWGgZl8UWoE1NGU1YTQ=; Hm_lpvt_46d556462595ed05e05f009cdafff31a=1717507160; htVC_2132_seccodecSRKk=1939482.ed497f50ec2e24ff25; htVC_2132_ulastactivity=1717507149%7C0; htVC_2132_auth=aa9ddejd4OTFj8o9Fm2LYd17HhwJmNgeH6ROae23BIuTzhCS0W2Iwd5%2BQuBcrlh3lO59ZONsMpate2EGNS9eijVphOSf; htVC_2132_lastcheckfeed=2002841%7C1717507149; htVC_2132_checkfollow=1; htVC_2132_lip=36.56.84.172%2C1717507149; htVC_2132_lastact=1717507154%09misc.php%09seccode; htVC_2132_connect_is_bind=1; htVC_2132_seccodecS=1939503.27fc6acc25ca6ab0ac'
+
 
 class wapj:
     def __init__(self, ck):
@@ -46,7 +49,7 @@ class wapj:
             return None
 
     def sign(self):
-        url = self.host + '/home.php?mod=task&do=apply&id=2'
+        url = self.host + '/home.php?mod=task&do=draw&id=2&referer=https%3A%2F%2Fwww.52pojie.cn%2Fhome.php%3Fmod%3Dtask%26do%3Dapply%26id%3D2'
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63090a1b) XWEB/9193 Flue',
@@ -81,19 +84,17 @@ class wapj:
             # print(res.text)
             # 根据正则规则匹配返回的html语言，判断是否签到成功
             # <a href="home.php?mod=task&amp;do=draw&amp;id=2&amp;referer=https%3A%2F%2Fwww.52pojie.cn%2Fhome.php%3Fmod%3Dtask%26do%3Dapply%26id%3D2" class="xi2">已签到</a>
-            if re.findall(r'https://static.52pojie.cn/static/image/common/wbs.png', res.text):
-                return True
-            else:
-                return False
+            if re.findall(r'https://static.52pojie.cn/static/image/common/qds.png', res.text):
+                print("今日未签到 执行签到任务")
+                self.sign()
+            elif re.findall(r'https://static.52pojie.cn/static/image/common/wbs.png', res.text):
+                self.msg += "今日已签到\n"
         except Exception as e:
             print(e)
             return False
 
     def main(self):
-        if not self.judge_sign():
-            self.sign()
-        else:
-            self.msg += '今日已签到\n'
+        self.judge_sign()
         self.get_user_info()
 
 
@@ -103,6 +104,7 @@ if __name__ == '__main__':
     for env in envs:
         ck = env['value']
         remarks = env.get('remarks', '')
+        # remarks = ''
         run = wapj(ck)
         run.main()
         if remarks and '@' in remarks:
