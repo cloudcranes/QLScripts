@@ -1,5 +1,7 @@
 import json
 import logging
+from datetime import datetime
+
 import requests
 from qinglong import ql
 from send import send
@@ -35,21 +37,26 @@ class qiaqia:
         headers = self.headers
         headers['Authorization'] = self.auth
         headers['Host'] = 'vip.qiaqiafood.com'
+        yearMonth = datetime.now().strftime('%Y-%m')
         data = json.dumps({
-            "yearMonth": "2024-08",
+            "yearMonth": yearMonth,
             "uid": self.userId,
             "tenantId": "1"
         })
+        self._config_info("签到日志如下：")
         response = requests.post(url, headers=headers, data=data).json()
+        print(response)
         if response['success']:
             res = response.get('data', [])
             if res:
                 for i in res:
                     self.continueDays = i.get('continueDays', None)
                     self.integralValue = i.get('integralValue', None)
-                    self._config_info(f"签到成功，连续签到{self.continueDays}天，获得{self.integralValue}积分")
+                    self._config_info(f"{i.get('yearMonth')}-{i.get('dayMonth')} 签到成功，连续签到{self.continueDays}天，获得{self.integralValue}积分")
+            return True
         else:
             self._config_error("签到失败")
+            return False
 
     def get_vip_info(self):
         url = 'https://vip.qiaqiafood.com/vip/member/getVipInfo'
@@ -97,6 +104,13 @@ class qiaqia:
         else:
             self._config_error("积分日志为空")
 
+    def main(self):
+        if not self.sign_in():
+            self._config_error("cookie失效，请重新获取")
+            return
+        self.get_vip_info()
+        self.points_log()
+
 
 if __name__ == '__main__':
     ql = ql()
@@ -106,11 +120,9 @@ if __name__ == '__main__':
         userId = env['value'].split('&')[1]
         remarks = env['remarks']
         q = qiaqia(auth, userId)
-        q.sign_in()
-        q.get_vip_info()
-        q.points_log()
-        # if remarks and "@" in remarks:
-        #     send.wxpusher(remarks.split('@')[1], q.msg)
-        # else:
-        #     print("未配置微信推送，请前往 https://wxpusher.zjiecode.com/ 申请并配置")
+        q.main()
+        if remarks and "@" in remarks:
+            send.wxpusher(remarks.split('@')[1], q.msg)
+        else:
+            print("未配置微信推送，请前往 https://wxpusher.zjiecode.com/ 申请并配置")
         print(q.msg)
