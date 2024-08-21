@@ -50,8 +50,8 @@ class qiaqia:
             res = response.get('data', [])
             if res:
                 for i in res:
-                    self.continueDays = i.get('continueDays', None)
-                    self.integralValue = i.get('integralValue', None)
+                    self.continueDays = res.get('continueDays', None)
+                    self.integralValue = res.get('integralValue', None)
                     self._config_info(f"{i.get('yearMonth')}-{i.get('dayMonth')} 签到成功，连续签到{self.continueDays}天，获得{self.integralValue}积分")
             return True
         else:
