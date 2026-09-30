@@ -1,64 +1,106 @@
-### QL-Scripts-青龙自用脚本
+# QLScripts — 青龙自用签到脚本
 
->  [!IMPORTANT]
->
->  **依赖文件**
->
->  - `qinglong.py`
->    - `api_url`: 青龙面板地址
->    - `client_id`: 青龙面板后台获取 （系统设置-->应用设置）
->    - `client_secret`: 青龙面板后台获取 （系统设置-->应用设置）
->  - `send.py`
->    - `wxpusher`的`appToken`: wxpusher后台应用token
->    - wxpusher后台：https://wxpusher.zjiecode.com/admin/
->
->  **环境变量填写说明**
->
->  - 如果需要推送日志，备注填写格式 备注@wxpusher_uid
->  - wxpusher_uid：公众号 WxPusher消息推送平台
+3 个独立签到脚本, 每个脚本头部自带 `cron:` 与 `new Env(...)` 元注释, 直接放进青龙面板 `/ql/scripts/` 即可。
 
-| 序号 |        名称        |  类型   |      环境变量      | 变量填写说明                                                 | 地址                                                         |
-| :--: | :----------------: | :-----: | :----------------: | :----------------------------------------------------------- | ------------------------------------------------------------ |
-|  1   |      吾爱破解      |   web   |    `wapj_data`     | `https://www.52pojie.cn/forum.php` 下的cookie                | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E5%90%BE%E7%88%B1%E7%A0%B4%E8%A7%A3.py) |
-|  2   |      阿里云盘      |   app   |    `alyp_data`     | `refresh_token`，获取地址：[这里](https://alist.nn.ci/zh/guide/drivers/aliyundrive.html) | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E9%98%BF%E9%87%8C%E4%BA%91%E7%9B%98.py) |
-|  3   |      禁漫天堂      |   web   |    `jmtt_data`     | `username=xxx&password=xxx`                                  | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E7%A6%81%E6%BC%AB%E5%A4%A9%E5%A0%82.py) |
-|      |      禁漫天堂      |   web   |  `jmtt_base_url`   | 禁漫天堂发布页：`https://jmcomicgo.xyz`                      |                                                              |
-|  4   |   携趣代理加白单   |   web   |    `xiequ_data`    | `uid=xxx&ukey=xxx`（携趣代理后台获取）                       | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E6%90%BA%E8%B6%A3%E4%BB%A3%E7%90%86%E7%99%BD%E5%90%8D%E5%8D%95%E7%AE%A1%E7%90%86) |
-|  5   |    恩山无线论坛    |   web   |   `enshan_data`    | `https://www.right.com.cn/forum/home.php`下的cookie          | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E6%81%A9%E5%B1%B1%E6%97%A0%E7%BA%BF%E8%AE%BA%E5%9D%9B.py) |
-|  6   |     DDNSTO续费     |   web   |   `ddnsto_data`    | `userid=xxx&cookie={xxx}`                                    | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/DDNSTO%E7%BB%AD%E8%B4%B9.py) |
-|  7   |      东方棘市      |   wx    |     dfjs_data      | https://ys.shajixueyuan.com/下的token                        | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E4%B8%9C%E6%96%B9%E6%A3%98%E5%B8%82.py) |
-|  8   |  腾讯视频_vip签到  | app+web |     txsp_data      | txspCookie={xxx}&txspRefreshCookie={xxx}&txspRefreshBody={xxx} | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E8%85%BE%E8%AE%AF%E8%A7%86%E9%A2%91_vip%E7%AD%BE%E5%88%B0.py) |
-|  9   |      霸王茶姬      |   wx    |     bwcj_data      | https://webapi2.qmai.cn下的qm-user-token                     | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E9%9C%B8%E7%8E%8B%E8%8C%B6%E5%A7%AC.py) |
-|  10  |      今日越城      |   app   | jinriyuecheng_data | mobile&password                                              | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E4%BB%8A%E6%97%A5%E8%B6%8A%E5%9F%8E.py) |
-|  11  | 恰恰瓜子会员俱乐部 |   wx    |    qiaqia_data     | Authorization&userId                                         | [链接](https://raw.githubusercontent.com/cloudcranes/QLScripts/main/scripts/%E6%81%B0%E6%81%B0%E7%93%9C%E5%AD%90.py) |
+## 站点一览
 
-- 禁漫天堂
+| 站点 | 脚本 | cron | 环境变量 |
+|---|---|---|---|
+| iKuuu VPN | `sites/ikuuu/ikuuu.py` | `35 8 * * *` | `IKUUU_ACCOUNTS` (email:pass 多行) |
+| JMComic | `sites/jmcomic/jmcomic_checkin.py` | `25 8 * * *` | `JMCOMIC_ACCOUNTS` (user:pass 多行) |
+| 雨云 (rainyun) | `sites/rainyun/rainyun.py` | `25 8 * * *` | `RAINYUN_ACCOUNTS` (email:pass 多行) + `RAINYUN_API_KEY` (可选) |
 
-  - username：登录用户名
-  - password：登陆密码
+每个脚本文件首行注释自带青龙面板识别格式: `cron:` + `new Env(...)`, 拉脚本时面板自动识别。
 
-- DDNSTO续费
+## 青龙面板拉取
 
-  - userid：先购买一次7天免费套餐 抓包查看https://www.ddnsto.com/api/user/routers/*****/ 这个url里面的*****就是userid
-  - cookie：登录https://www.ddnsto.com/app/#/devices 抓包cookie
+```bash
+# 1. 一次性 git clone 到 /ql/scripts/
+cd /ql/scripts
+git clone https://github.com/cloudcranes/QLScripts.git cloudcranes
+ln -s cloudcranes/sites/ikuuu/ikuuu.py ikuuu.py
+ln -s cloudcranes/sites/jmcomic/jmcomic_checkin.py jmcomic.py
+ln -s cloudcranes/sites/rainyun/rainyun.py rainyun.py
+```
 
-- 腾讯视频_vip签到
+或直接在面板 "订阅管理" 加 `https://github.com/cloudcranes/QLScripts.git` 拉取。
 
-  - txspCookie：腾讯视频app 进入签到页面的Cookie
+## 青龙面板配置 (推荐)
 
-  - txspRefreshCookie：腾讯视频网页NewRefresh接口中(https://pbaccess.video.qq.com/trpc.video_account_login.web_login_trpc.WebLoginTrpc/NewRefresh) 的cookie，用来刷新Cookie中的vqq_vusession
+1. 面板 "定时任务" → 新建, 1 个站 1 个任务
+2. **脚本路径**: `python sites/<domain>/<domain>.py` 或上面建好的软链
+3. **定时规则**: 见上表 cron
+4. **环境变量**: 添加 `<DOMAIN>_ACCOUNTS`, 多账号用 `\\n` 分隔 (青龙界面 `\n` 会被转义)
 
-  - txspRefreshBody：腾讯视频网页NewRefresh接口中(https://pbaccess.video.qq.com/trpc.video_account_login.web_login_trpc.WebLoginTrpc/NewRefresh) 的请求体，用来刷新Cookie中的vqq_vusession
+```bash
+# 雨云示例
+RAINYUN_ACCOUNTS = "alanmaster.amy@gmail.com:xg363034"
+```
 
-    - json格式 eg:
+```bash
+# iKuuu 示例
+IKUUU_ACCOUNTS = "qpwo10qpwo@gmail.com:cxd89851718\n2521543680@qq.com:xg363034"
+```
 
-      ```json
-      {"data":{"errcode":0,"err_msg":"","vuserid":"xx","vusession":"xxx","head":"xxx","nick":"DDD","next_refresh_time":"6594","access_token":"xxxx","appid":"xxx","openid":"xxx","refresh_token":"xxxx"},"ret":0,"msg":""}
-      ```
+```bash
+# JMComic 示例
+JMCOMIC_ACCOUNTS = "Alanmaster:xg363034\nqpwo10qpwo:zxd119cs"
+```
 
+## 依赖安装
 
-- 今日越城（代码改自 [xzxxn777](https://github.com/xzxxn777/Surge) 大佬）
-  - cookie填写格式：手机号&密码
-- 恰恰瓜子会员俱乐部
+在青龙面板 "依赖管理" 装:
 
-  - cookie填写格式：抓包 https://vip.qiaqiafood.com 下的请求头Authorization和返回body里的userId
+```
+httpx curl_cffi        # 三个脚本通用
+ddddocr opencv-python-headless playwright    # 雨云 TCaptcha 求解
+playwright-stealth faker    # iKuuu login 模式 (可选, cookie-only 模式不需要)
+```
+
+playwright 装完后还要 `playwright install chromium` (雨云降级策略需要)。
+
+## 本地调试 (无青龙)
+
+```powershell
+# Windows PowerShell
+$env:IKUUU_ACCOUNTS = "email1:pass1`nemail2:pass2"
+$env:PYTHONIOENCODING = "utf-8"
+python sites\ikuuu\ikuuu.py
+```
+
+## 凭据 / cookie 文件
+
+- `*_accounts.txt`: 本地调试 fallback (一行 `username:password`)
+- `*_cookies.jsonl`: cookie 复用存储 (脚本自动维护)
+- 均已在 `.gitignore` 中, 严禁入库
+
+## 目录结构
+
+```
+sites/
+├── ikuuu/
+│   ├── ikuuu.py
+│   ├── ikuuu_accounts.txt          # 模板 (不传 git)
+│   ├── ikuuu_cookies.jsonl         # 运行时生成
+│   └── ikuuu_cookies.txt           # legacy 兜底
+├── jmcomic/
+│   ├── jmcomic_checkin.py
+│   ├── jmcomic_accounts.txt        # 模板 (不传 git)
+│   ├── checkin_state.json          # 运行时生成
+│   ├── _pretty.py                  # 兼容层
+│   └── ql_notify.py                # 兼容层
+└── rainyun/
+    ├── rainyun.py
+    ├── tcaptcha_solver.py
+    ├── rainyun_accounts.txt        # 模板 (不传 git)
+    └── rainyun_cookies.jsonl        # 运行时生成
+```
+
+## 升级
+
+```bash
+cd /ql/scripts/cloudcranes
+git pull
+```
+
+脚本逻辑变更会被拉取, 但 `accounts.txt` / `cookies.jsonl` 是 .gitignore, 不会覆盖本地凭据。
