@@ -1,18 +1,19 @@
 """
 cron: 50 8 * * *
 new Env('MEFRP_USER_TOKEN'): MEFRP 个人页 /api/auth/user-token 抓 Bearer (sk-...)
-new Env('REMOTE_CHROME_CDP'): (可选) http://127.0.0.1:9222 — 用远程 Chrome 跑 ESA slide; 不填则本地 headless chromium
+new Env('REMOTE_CHROME_CDP'): (必填) http://host:9222 — 远程 Chrome CDP 地址, 面板主机不装 chromium
+  在另一台机器启动: chrome.exe --headless --no-sandbox --disable-gpu --remote-debugging-port=9222
 
 MEFRP (MeFrp.com) 多账号签到 — 青龙面板原生适配
 
 策略:
   1) 优先 MEFRP_USER_TOKEN 环境变量 (青龙推荐)
-  2) 调用 /3rdparty/captcha?client=smartapi 触发 ESA WAF slide, 用 headless chromium (或远程 CDP) 跑过
+  2) 调用 /3rdparty/captcha?client=smartapi 触发 ESA WAF slide, 用远程 chromium (CDP) 跑过
   3) 拿 base64 字符串 → 解码出 token||client → 截取 token 部分
   4) POST /api/auth/user/sign (Bearer) → 完成每日签到
 
 依赖: pip install playwright requests
-        playwright install chromium
+        (不需要 playwright install chromium — 走远程 Chrome)
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ import sys
 from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent
+# 单脚本自洽: 同级 _pretty.py / ql_notify.py
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
@@ -66,17 +68,18 @@ class MefrpSigner:
             raise RuntimeError("未安装 playwright, 无法打开验证码页面") from exc
 
         remote_cdp = os.getenv("REMOTE_CHROME_CDP", "").strip()
+        if not remote_cdp:
+            raise RuntimeError(
+                "未配置 REMOTE_CHROME_CDP. 面板主机不能装 chromium, "
+                "必须在外部机器启动 chrome --headless --remote-debugging-port=9222, "
+                "并设置环境变量 REMOTE_CHROME_CDP=http://host:9222"
+            )
         with sync_playwright() as p:
             browser = context = None
             try:
-                if remote_cdp:
-                    self._log(f"使用远程 Chrome: {remote_cdp}")
-                    browser = p.chromium.connect_over_cdp(remote_cdp)
-                    context = browser.contexts[0] if browser.contexts else browser.new_context()
-                else:
-                    self._log("未配置 REMOTE_CHROME_CDP, 使用本地 headless Chromium")
-                    browser = p.chromium.launch(headless=True, args=["--window-size=1920,1080"])
-                    context = browser.new_context()
+                self._log(f"使用远程 Chrome: {remote_cdp}")
+                browser = p.chromium.connect_over_cdp(remote_cdp)
+                context = browser.contexts[0] if browser.contexts else browser.new_context()
 
                 context.grant_permissions(["clipboard-read", "clipboard-write"], origin="https://www.mefrp.com")
                 page = context.new_page()
