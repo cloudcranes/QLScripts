@@ -1,6 +1,6 @@
 # QLScripts — 青龙自用签到脚本
 
-4 个独立签到脚本, 每个脚本头部自带 `cron:` 与 `new Env(...)` 元注释, 直接放进青龙面板 `/ql/scripts/` 即可。
+5 个独立签到脚本, 每个脚本头部自带 `cron:` 与 `new Env(...)` 元注释, 直接放进青龙面板 `/ql/scripts/` 即可。
 
 ## 站点一览
 
@@ -10,6 +10,7 @@
 | JMComic | `sites/jmcomic/jmcomic_checkin.py` | `25 8 * * *` | `JMCOMIC_ACCOUNTS` (user:pass 多行) |
 | 雨云 (rainyun) | `sites/rainyun/rainyun.py` | `25 8 * * *` | `RAINYUN_ACCOUNTS` (email:pass 多行) + `RAINYUN_API_KEY` (可选) |
 | MEFRP | `sites/mefrp/mefrp.py` | `50 8 * * *` | `MEFRP_USER_TOKEN` (Bearer sk-...) + `REMOTE_CHROME_CDP` (可选) |
+| 百度贴吧 | `sites/tieba/tieba.py` | `45 8 * * *` | `Tieba_BDUSS` + `Tieba_STOKEN` (浏览器 Cookie) |
 
 每个脚本文件首行注释自带青龙面板识别格式: `cron:` + `new Env(...)`, 拉脚本时面板自动识别。
 
@@ -23,6 +24,7 @@ ln -s cloudcranes/sites/ikuuu/ikuuu.py ikuuu.py
 ln -s cloudcranes/sites/jmcomic/jmcomic_checkin.py jmcomic.py
 ln -s cloudcranes/sites/rainyun/rainyun.py rainyun.py
 ln -s cloudcranes/sites/mefrp/mefrp.py mefrp.py
+ln -s cloudcranes/sites/tieba/tieba.py tieba.py
 ```
 
 或直接在面板 "订阅管理" 加 `https://github.com/cloudcranes/QLScripts.git` 拉取。
@@ -55,15 +57,20 @@ MEFRP_USER_TOKEN = "sk-eyJ..."
 REMOTE_CHROME_CDP = "http://192.168.1.107:9222"   # 可选, 不填走本地 headless
 ```
 
+```bash
+# 百度贴吧 — 浏览器登录 https://tieba.baidu.com, F12 抓 BDUSS + STOKEN
+Tieba_BDUSS = "..."
+Tieba_STOKEN = "..."
+```
+
 ## 依赖安装
 
 在青龙面板 "依赖管理" 装:
 
 ```
-httpx curl_cffi        # ikuuu/jmcomic/rainyun 通用
-ddddocr opencv-python-headless playwright    # 雨云 TCaptcha 求解 + mefrp 浏览器过 slide
+httpx curl_cffi requests        # 通用
+ddddocr opencv-python-headless playwright    # 雨云 TCaptcha + mefrp 浏览器过 slide
 playwright-stealth faker    # iKuuu login 模式 (可选, cookie-only 模式不需要)
-requests                # mefrp API 调用
 ```
 
 playwright 装完后还要 `playwright install chromium` (rainyun 降级策略 + mefrp 主流程都需要)。
@@ -103,9 +110,12 @@ sites/
 │   ├── tcaptcha_solver.py
 │   ├── rainyun_accounts.txt        # 模板 (不传 git)
 │   └── rainyun_cookies.jsonl        # 运行时生成
-└── mefrp/
-    ├── mefrp.py                    # 浏览器过 ESA slide + 每日签到
-    ├── _pretty.py                  # 兼容层
+├── mefrp/
+│   ├── mefrp.py                    # 浏览器过 ESA slide + 每日签到
+│   ├── _pretty.py                  # 兼容层
+│   └── ql_notify.py                # 兼容层
+└── tieba/
+    ├── tieba.py                    # 百度贴吧多吧批量签到 (基于 acoolbook/ym 改造)
     └── ql_notify.py                # 兼容层
 ```
 
