@@ -8,8 +8,8 @@
 |---|---|---|---|
 | iKuuu VPN | `sites/ikuuu/ikuuu.py` | `35 8 * * *` | `IKUUU_ACCOUNTS` (email:pass 多行) |
 | JMComic | `sites/jmcomic/jmcomic_checkin.py` | `25 8 * * *` | `JMCOMIC_ACCOUNTS` (user:pass 多行) |
-| 雨云 (rainyun) | `sites/rainyun/rainyun.py` | `25 8 * * *` | `RAINYUN_ACCOUNTS` (email:pass 多行) + `RAINYUN_API_KEY` (可选) |
-| MEFRP | `sites/mefrp/mefrp.py` | `50 8 * * *` | `MEFRP_USER_TOKEN` (Bearer sk-...) + `REMOTE_CHROME_CDP` (可选) |
+| 雨云 (rainyun) | `sites/rainyun/rainyun.py` | `25 8 * * *` | `RAINYUN_ACCOUNTS` (email:pass 多行) + `RAINYUN_API_KEY` (可选) + `RAINYUN_REMOTE_CHROME_CDP` (可选) |
+| MEFRP | `sites/mefrp/mefrp.py` | `50 8 * * *` | `MEFRP_USER_TOKEN` (Bearer sk-...) + `REMOTE_CHROME_CDP` (必填) |
 | 百度贴吧 | `sites/tieba/tieba.py` | `45 8 * * *` | `Tieba_BDUSS` + `Tieba_STOKEN` (浏览器 Cookie) |
 
 每个脚本文件首行注释自带青龙面板识别格式: `cron:` + `new Env(...)`, 拉脚本时面板自动识别。
@@ -39,6 +39,8 @@ ln -s cloudcranes/sites/tieba/tieba.py tieba.py
 ```bash
 # 雨云
 RAINYUN_ACCOUNTS = "alanmaster.amy@gmail.com:xg363034"
+# 可选 — 第三方 API 挂了时降级 (需另一台机器跑 chrome)
+RAINYUN_REMOTE_CHROME_CDP = "http://192.168.1.107:9222"
 ```
 
 ```bash
@@ -54,7 +56,8 @@ JMCOMIC_ACCOUNTS = "Alanmaster:xg363034\nqpwo10qpwo:zxd119cs"
 ```bash
 # MEFRP — Bearer token, 单账号
 MEFRP_USER_TOKEN = "sk-eyJ..."
-REMOTE_CHROME_CDP = "http://192.168.1.107:9222"   # 可选, 不填走本地 headless
+# 必填 — 远程 Chrome CDP, 另一台机器启动
+REMOTE_CHROME_CDP = "http://192.168.1.107:9222"
 ```
 
 ```bash
@@ -63,17 +66,42 @@ Tieba_BDUSS = "..."
 Tieba_STOKEN = "..."
 ```
 
+## 远程 Chrome 启动 (mefrp + rainyun 降级用)
+
+**面板主机不装 chromium**。在另一台机器(局域网 PC、NAS、路由器,任何能装 Chrome 的)起一个 headless 实例:
+
+**Windows**:
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" `
+  --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage `
+  --remote-debugging-port=9222 --remote-debugging-address=0.0.0.0
+```
+
+**Linux**:
+```bash
+google-chrome --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --remote-debugging-port=9222 --remote-debugging-address=0.0.0.0
+```
+
+**Docker** (推荐, 一行):
+```bash
+docker run -d --name chrome-cdp --restart=unless-stopped -p 9222:9222 \
+  -v /tmp/chrome-data:/data \
+  ghcr.io/browserless/chromium:latest \
+  --remote-debugging-port=9222 --remote-debugging-address=0.0.0.0 --no-sandbox
+```
+
+启动后 curl `http://host:9222/json/version` 看返回 `{webSocketDebuggerUrl: ...}` 即正常。然后把 `http://host:9222` 填到面板 `REMOTE_CHROME_CDP` / `RAINYUN_REMOTE_CHROME_CDP`。
+
 ## 依赖安装
 
-在青龙面板 "依赖管理" 装:
-
+面板 "依赖管理" 装:
 ```
 httpx curl_cffi requests        # 通用
-ddddocr opencv-python-headless playwright    # 雨云 TCaptcha + mefrp 浏览器过 slide
-playwright-stealth faker    # iKuuu login 模式 (可选, cookie-only 模式不需要)
+ddddocr opencv-python-headless playwright    # mefrp/rainyun 都要, 但只走 CDP 不装 chromium
 ```
 
-playwright 装完后还要 `playwright install chromium` (rainyun 降级策略 + mefrp 主流程都需要)。
+**注意**: **不需要** `playwright install chromium`, 远程 Chrome 是另一台机器的事。
 
 ## 本地调试 (无青龙)
 
