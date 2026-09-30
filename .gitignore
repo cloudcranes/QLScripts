@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# 凭据 / cookie (严禁入库, 各自脚本运行时生成)
+*_accounts.txt
+*_cookies.txt
+*_cookies.jsonl
+accounts.txt
+cookies.txt
+cookies.jsonl
+
+# 运行时状态
+checkin_state.json
+state.json
+*.log
+*.tmp
